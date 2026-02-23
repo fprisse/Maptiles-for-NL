@@ -26,6 +26,9 @@ The Node-RED worldmap node is based on Leaflet, which requires **raster PNG tile
 
 > If you want a wider area (e.g. BeNeLux or Western Europe), download that extract instead. The tile URL format is identical regardless of coverage.
 
+CLI Command in Ubuntu
+wget -c https://data.maptiler.com/download/WyJkZWU2ZDFmMi0zMDQ1LTQ2YmYtYTUxMS04OGU5NmY2OThiZWYiLG51bGwsMTY4Njld.aZylbw.IvPsjqX0Eq86VJHNvq_JC6xBP1U/maptiler-osm-2020-02-10-v3.11-europe_netherlands.mbtiles
+
 ---
 
 ## 2. Install MBTileServer
