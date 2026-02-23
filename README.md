@@ -72,8 +72,8 @@ After extraction the `mbtileserver` binary will be in the current directory.
 ### 2.4 Install the binary
 
 ```bash
-chmod +x mbtileserver_v0.11.0_linux_amd64.zip
-sudo mv mbtileserver /usr/local/bin/mbtileserver_v0.11.0_linux_amd64.zip
+chmod +x mbtileserver_v0.11.0_linux_amd64
+sudo mv mbtileserver /usr/local/bin/mbtileserver_v0.11.0_linux_amd64
 ```
 
 Verify it is accessible:
