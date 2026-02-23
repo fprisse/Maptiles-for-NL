@@ -26,9 +26,6 @@ The Node-RED worldmap node is based on Leaflet, which requires **raster PNG tile
 
 > If you want a wider area (e.g. BeNeLux or Western Europe), download that extract instead. The tile URL format is identical regardless of coverage.
 
-CLI Command in Ubuntu
-wget -c https://data.maptiler.com/download/WyJkZWU2ZDFmMi0zMDQ1LTQ2YmYtYTUxMS04OGU5NmY2OThiZWYiLG51bGwsMTY4Njld.aZylbw.IvPsjqX0Eq86VJHNvq_JC6xBP1U/maptiler-osm-2020-02-10-v3.11-europe_netherlands.mbtiles
-
 ---
 
 ## 2. Install MBTileServer
@@ -48,23 +45,39 @@ Copy your downloaded `.mbtiles` file into this folder:
 cp ~/Downloads/netherlands.mbtiles /opt/tiles/
 ```
 
-### 2.2 Download the mbtileserver binary
+### 2.2 Find the correct download filename
 
-Go to: https://github.com/consbio/mbtileserver/releases
+The release filenames include version numbers and vary between releases. First query the GitHub API to get the exact current filenames:
 
-Download the correct binary for your system:
-
-**Raspberry Pi (ARM 64-bit):**
 ```bash
-wget https://github.com/consbio/mbtileserver/releases/latest/download/mbtileserver_linux_arm64 -O mbtileserver
+curl -s https://api.github.com/repos/consbio/mbtileserver/releases/latest | grep "browser_download_url"
 ```
 
-**Standard Linux PC (x86 64-bit):**
+This returns all available files for the latest release. Identify the correct one for your system:
+
+- Raspberry Pi (ARM 64-bit): look for a filename containing `linux_arm64`
+- Standard Linux PC (x86 64-bit): look for a filename containing `linux_amd64`
+
+The file will be either a plain binary or a `.tar.gz` archive.
+
+### 2.3 Download the binary
+
+Use the exact URL returned by the curl command above. Example (version number will differ):
+
+**If it is a plain binary:**
 ```bash
-wget https://github.com/consbio/mbtileserver/releases/latest/download/mbtileserver_linux_amd64 -O mbtileserver
+wget https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_0.11.0_linux_amd64 -O mbtileserver
 ```
 
-### 2.3 Install the binary
+**If it is a .tar.gz archive:**
+```bash
+wget https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_0.11.0_linux_amd64.tar.gz
+tar -xzf mbtileserver_0.11.0_linux_amd64.tar.gz
+```
+
+After extraction the `mbtileserver` binary will be in the current directory.
+
+### 2.4 Install the binary
 
 ```bash
 chmod +x mbtileserver
