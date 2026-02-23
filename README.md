@@ -64,24 +64,16 @@ The file will be either a plain binary or a `.tar.gz` archive.
 
 Use the exact URL returned by the curl command above. Example (version number will differ):
 
-**If it is a plain binary:**
-```bash
-wget https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_0.11.0_linux_amd64 -O mbtileserver
-```
-
-**If it is a .tar.gz archive:**
-```bash
-wget https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_0.11.0_linux_amd64.tar.gz
-tar -xzf mbtileserver_0.11.0_linux_amd64.tar.gz
-```
+**Download extract and move to UbuntuServer:**
+https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_v0.11.0_linux_amd64.zip
 
 After extraction the `mbtileserver` binary will be in the current directory.
 
 ### 2.4 Install the binary
 
 ```bash
-chmod +x mbtileserver
-sudo mv mbtileserver /usr/local/bin/mbtileserver
+chmod +x mbtileserver_v0.11.0_linux_386
+sudo mv mbtileserver /usr/local/bin/mbtileserver_v0.11.0_linux_386
 ```
 
 Verify it is accessible:
