@@ -50,7 +50,7 @@ For Open Seamaps
 
 Save as `openseamap.xml` in the `mapsources` folder inside your MOBAC directory, then restart MOBAC.
 
-Remember: OpenSeaMap is a **transparent overlay** showing nautical marks and buoys — it has no background. It is designed to sit on top of OSM Standard, not replace it.
+NB: OpenSeaMap is a **transparent overlay** showing nautical marks and buoys — it has no background. It is designed to sit on top of OSM Standard, not replace it.
 You can keep it totaaly seperate and comine in teh WorldMap node in Node-red
 
 ## 2. Copy Tiles to Linux Server
