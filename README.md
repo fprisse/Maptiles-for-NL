@@ -1,141 +1,89 @@
-# Offline Map for Node-RED Worldmap
-## MBTileServer Setup Manual
-
----
-
-## Table of Contents
-
-1. [Download Raster Map Tiles](#1-download-raster-map-tiles)
-2. [Install MBTileServer](#2-install-mbtileserver)
-3. [Test MBTileServer Manually](#3-test-mbtileserver-manually)
-4. [Run MBTileServer as a System Service](#4-run-mbtileserver-as-a-system-service)
-5. [Configure Node-RED Worldmap Node](#5-configure-node-red-worldmap-node)
+# Offline Map Tiles for Node-RED Worldmap
+## Setup Guide
 
 ---
 
 ## 1. Download Raster Map Tiles
 
-The Node-RED worldmap node is based on Leaflet, which requires **raster PNG tiles**. Vector tiles (used by MapLibre/Mapbox) are not compatible.
+Use **MOBAC (Mobile Atlas Creator)** to create a free raster `.mbtiles` file.
 
-**Recommended source: MapTiler Data**
-
-1. Go to https://data.maptiler.com/downloads/europe/netherlands/
-2. Create a free account if you do not have one
-3. Select the **OpenStreetMap** raster dataset for the Netherlands
-4. Download the `.mbtiles` file (approximately 300–600 MB depending on zoom levels selected)
-
-> If you want a wider area (e.g. BeNeLux or Western Europe), download that extract instead. The tile URL format is identical regardless of coverage.
+1. Install Java 11 64-bit from https://adoptium.net/temurin/releases/?version=11
+2. Download MOBAC from https://mobac.sourceforge.io/ and extract it
+3. Launch `Mobile_Atlas_Creator.exe`
+4. When prompted for atlas format select **MBTiles SQLite**, name it `Nederland`
+5. In the Map Source dropdown find and select **OSM Standard**
+   - If not present, create `mapsources\osm_standard.xml` in the MOBAC folder:
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <customMapSource>
+       <name>OSM Standard</name>
+       <minZoom>0</minZoom>
+       <maxZoom>18</maxZoom>
+       <tileType>png</tileType>
+       <tileUpdate>None</tileUpdate>
+       <url>https://tile.openstreetmap.org/{$z}/{$x}/{$y}.png</url>
+       <backgroundColor>#000000</backgroundColor>
+   </customMapSource>
+   ```
+   Restart MOBAC after saving the file.
+6. Navigate the map to the Netherlands
+7. Hold **Ctrl** and drag a rectangle over the Netherlands
+8. Tick zoom levels **6 through 14** in the left panel
+9. Click **Add Selection** then **Create Atlas**
+10. Output file is in the `atlases\Nederland\` folder inside the MOBAC directory
 
 ---
 
-## 2. Install MBTileServer
+## 2. Copy Tiles to Linux Server
 
-MBTileServer is a single self-contained binary with no dependencies. It reads `.mbtiles` files directly and serves tiles over HTTP.
+Using WinSCP (drag and drop) or from Windows command prompt:
 
-### 2.1 Create a directory for your tiles
+```
+scp C:\MOBAC\atlases\Nederland\Nederland.mbtiles user@192.168.1.140:/opt/tiles/
+```
+
+Create the tiles folder first if needed:
 
 ```bash
 sudo mkdir -p /opt/tiles
 sudo chown $USER:$USER /opt/tiles
 ```
 
-Copy your downloaded `.mbtiles` file into this folder:
+---
 
-```bash
-cp ~/Downloads/netherlands.mbtiles /opt/tiles/
-```
+## 3. Install MBTileServer
 
-### 2.2 Find the correct download filename
-
-The release filenames include version numbers and vary between releases. First query the GitHub API to get the exact current filenames:
+Find the correct binary filename for your system:
 
 ```bash
 curl -s https://api.github.com/repos/consbio/mbtileserver/releases/latest | grep "browser_download_url"
 ```
 
-This returns all available files for the latest release. Identify the correct one for your system:
-
-- Raspberry Pi (ARM 64-bit): look for a filename containing `linux_arm64`
-- Standard Linux PC (x86 64-bit): look for a filename containing `linux_amd64`
-
-The file will be either a plain binary or a `.tar.gz` archive.
-
-### 2.3 Download the binary
-
-Use the exact URL returned by the curl command above. Example (version number will differ):
-
-**Download extract and move to UbuntuServer:**
-https://github.com/consbio/mbtileserver/releases/download/v0.11.0/mbtileserver_v0.11.0_linux_amd64.zip
-
-After extraction the `mbtileserver` binary will be in the current directory.
-
-### 2.4 Install the binary
+Download the `linux_amd64` version (or `linux_arm64` for Raspberry Pi):
 
 ```bash
-chmod +x mbtileserver_v0.11.0_linux_amd64
-sudo mv mbtileserver /usr/local/bin/mbtileserver_v0.11.0_linux_amd64
+wget https://github.com/consbio/mbtileserver/releases/download/vX.X.X/mbtileserver_vX.X.X_linux_amd64 -O ~/mbtileserver
+chmod +x ~/mbtileserver
+sudo mv ~/mbtileserver /usr/local/bin/mbtileserver
 ```
 
-Verify it is accessible:
+Test it:
 
 ```bash
-mbtileserver --version
+mbtileserver -d /opt/tiles
 ```
+
+Then open `http://192.168.1.140:8000/services` — you should see your tileset listed.
 
 ---
 
-## 3. Test MBTileServer Manually
-
-Before setting up the service, confirm everything works:
-
-```bash
-mbtileserver --dir /opt/tiles
-```
-
-You should see output similar to:
-
-```
-Serving tiles from /opt/tiles
-Listening on port 8000
-```
-
-Open a browser and go to:
-
-```
-http://localhost:8000/services
-```
-
-You should see a JSON response listing your `.mbtiles` file, for example:
-
-```json
-{
-  "netherlands": {
-    "url": "http://localhost:8000/services/netherlands"
-  }
-}
-```
-
-The tile URL pattern for use in worldmap will be:
-
-```
-http://localhost:8000/services/netherlands/tiles/{z}/{x}/{y}.png
-```
-
-> The name `netherlands` in the URL comes from the filename of your `.mbtiles` file without the extension. If your file is named `OSM_netherlands.mbtiles`, the URL will use `OSM_netherlands`.
-
-Press Ctrl+C to stop the manual test before proceeding to the next step.
-
----
-
-## 4. Run MBTileServer as a System Service
-
-### 4.1 Create the systemd service file
+## 4. Run as a System Service
 
 ```bash
 sudo nano /etc/systemd/system/mbtileserver.service
 ```
 
-Paste the following content, adjusting `User` to your actual Linux username:
+Paste this, replacing `user` with your Linux username:
 
 ```ini
 [Unit]
@@ -143,80 +91,65 @@ Description=MBTile Server
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/mbtileserver --dir /opt/tiles
+ExecStart=/usr/local/bin/mbtileserver -d /opt/tiles
 Restart=always
-User=pi
+User=user
 WorkingDirectory=/opt/tiles
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Save and exit: Ctrl+O, Enter, Ctrl+X.
-
-### 4.2 Enable and start the service
+Enable and start:
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable mbtileserver
 sudo systemctl start mbtileserver
-```
-
-### 4.3 Verify the service is running
-
-```bash
 sudo systemctl status mbtileserver
 ```
 
-Expected output:
+Optional — allow service control without password. Add to sudoers (`sudo visudo`):
 
 ```
-● mbtileserver.service - MBTile Server
-     Loaded: loaded (/etc/systemd/system/mbtileserver.service; enabled)
-     Active: active (running) since ...
-```
-
-The service will now start automatically at every boot.
-
-### 4.4 Useful management commands
-
-```bash
-sudo systemctl stop mbtileserver        # stop the service
-sudo systemctl restart mbtileserver     # restart after changes
-sudo journalctl -u mbtileserver -f      # view live logs
+user ALL=(ALL) NOPASSWD: /usr/bin/systemctl start mbtileserver, /usr/bin/systemctl stop mbtileserver, /usr/bin/systemctl restart mbtileserver
 ```
 
 ---
 
-## 5. Configure Node-RED Worldmap Node
+## 5. Configure Node-RED Worldmap
 
-### 5.1 Open the worldmap node settings
+### Option A — Via worldmap node settings
 
-In the Node-RED editor, double-click your **worldmap** node to open its properties.
-
-### 5.2 Settings to change
+Double-click the worldmap node and fill in:
 
 | Field | Value |
 |---|---|
-| **Map name** | `Local` |
-| **Map URL** | `http://localhost:8000/services/netherlands/tiles/{z}/{x}/{y}.png` |
-| **Map options** | `{"maxZoom":14}` |
-| **Map list** | add `Local` to the existing list, e.g. `OSMG,OSMC,EsriC,Local` |
+| **Map name** | `Nederland OSM` |
+| **Map URL** | `http://192.168.1.140:8000/services/Nederland/tiles/{z}/{x}/{y}.png` |
+| **Map options** | `{"maxZoom":14,"attribution":"© OpenStreetMap contributors"}` |
+| **Map list** | add `Nederland OSM` to existing entries |
+| **Base map** | select `Custom Map Provider` |
 
-> Adjust the URL to match your actual `.mbtiles` filename if it differs from `netherlands`.
+### Option B — Via inject + function node (auto-registers on deploy)
 
-### 5.3 Deploy
+Add an **inject** node (fire once, delay 1s) connected to a **function** node, wired to the worldmap node:
 
-Click **Done** then click the red **Deploy** button.
-
-### 5.4 Select the offline map in the browser
-
-Open the worldmap at:
-
+```javascript
+msg.payload = {
+    command: {
+        map: {
+            name: "Local",
+            url: "http://192.168.1.140:8000/services/Nederland/tiles/{z}/{x}/{y}.png",
+            opt: { maxZoom: 14 }
+        }
+    }
+};
+return msg;
 ```
-http://<your-host>:1880/worldmap
-```
 
-Open the **layers panel** (icon in the top-right corner of the map). Under base maps, select **Local**. The map will switch to your offline tiles immediately.
+Also add `Local` to the **Map list** field in the worldmap node, and add `ADS-B` to the **Overlays** list.
 
-> If the map shows blank grey tiles, confirm mbtileserver is running (`sudo systemctl status mbtileserver`) and that the URL in the worldmap node exactly matches the filename of your `.mbtiles` file.
+### Selecting the map
+
+Open the worldmap at `http://192.168.1.140:1880/worldmap`, open the layers panel (top right) and select **Local** or **Nederland OSM** as the base map.
