@@ -34,6 +34,25 @@ Use **MOBAC (Mobile Atlas Creator)** to create a free raster `.mbtiles` file.
 
 ---
 
+For Open Seamaps 
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<customMapSource>
+    <name>OpenSeaMap</name>
+    <minZoom>0</minZoom>
+    <maxZoom>18</maxZoom>
+    <tileType>png</tileType>
+    <tileUpdate>None</tileUpdate>
+    <url>https://tiles.openseamap.org/seamark/{$z}/{$x}/{$y}.png</url>
+    <backgroundColor>#000000</backgroundColor>
+</customMapSource>
+```
+
+Save as `openseamap.xml` in the `mapsources` folder inside your MOBAC directory, then restart MOBAC.
+
+Remember: OpenSeaMap is a **transparent overlay** showing nautical marks and buoys — it has no background. It is designed to sit on top of OSM Standard, not replace it.
+You can keep it totaaly seperate and comine in teh WorldMap node in Node-red
+
 ## 2. Copy Tiles to Linux Server
 
 Using WinSCP (drag and drop) or from Windows command prompt:
